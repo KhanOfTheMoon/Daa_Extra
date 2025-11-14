@@ -7,7 +7,7 @@ The goal was to find all occurrences of a pattern inside a text string, and see 
 
 ## Implementation
 
-Everything is in one class `KMP` (in my case `org.example.KMP`).
+Everything is in one class KMP (in my case org.example.KMP).
 
 Main parts:
 
