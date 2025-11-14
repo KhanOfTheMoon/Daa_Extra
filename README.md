@@ -1,58 +1,61 @@
 # KMP String Matching in Java
 
-This project implements the **Knuth–Morris–Pratt (KMP)** string matching algorithm in Java.  
-The program finds all occurrences of a pattern in a text, builds the LPS array, and prints timings for preprocessing and search.
+## Introduction
+
+For this task I picked the Knuth–Morris–Pratt (KMP) algorithm from the list 
+The goal was to find all occurrences of a pattern inside a text string, and see how the algorithm behaves on short, medium and long inputs
 
 ## Implementation
 
-- Class: `KMP`
-- `buildLps(String pattern)`: builds the LPS (Longest Proper Prefix which is also Suffix) array used to skip redundant comparisons.
-- `kmpSearch(String text, String pattern, int[] lps)`: performs the KMP search and returns all starting indices of matches.
-- `main(String[] args)`: runs three fixed tests (short, medium, long strings) and prints:
-  - text and pattern,
-  - LPS array,
-  - list of match indices,
-  - LPS build time and search time (in ms).
+Everything is in one class `KMP` (in my case `org.example.KMP`).
 
-## Testing Results
+Main parts:
 
-Three test cases:
+- `buildLps(String pattern)` – creates the LPS array (longest proper prefix which is also suffix).  
+  This array tells us how far we can shift the pattern when we get a mismatch.
+- `kmpSearch(String text, String pattern, int[] lps)` – actually runs KMP and returns all starting
+  indices of matches.
+- `main(String[] args)` – just calls these methods for three test strings (short, medium, long) and
+  prints text, pattern, LPS array, match indices and timings.
 
-1. **SHORT**  
-   - Text: `banana`  
-   - Pattern: `ana`  
-   - LPS: `[0, 0, 1]`  
-   - Matches: `[1, 3]`
+## How KMP works
 
-2. **MEDIUM**  
-   - Text: `abracadabra`  
-   - Pattern: `abra`  
-   - LPS: `[0, 0, 0, 1]`  
-   - Matches: `[0, 7]`
+Instead of checking the pattern from scratch after every mismatch (like the naïve algorithm),
+KMP remembers information about the pattern itself in the LPS array.
 
-3. **LONG**  
-   - Text: 12×`"abcxabcdabxabcdabcdabcy"` + `"test"` (length 280)  
-   - Pattern: `abcdabcy`  
-   - LPS: `[0, 0, 0, 0, 1, 2, 3, 0]`  
-   - Matches: `[15, 38, 61, 84, 107, 130, 153, 176, 199, 222, 245, 268]`
+When some prefix of the pattern already matched and we hit a mismatch, we don’t go back in the text.
+We move the pattern using the LPS value and continue from there.  
+Because of this we scan the text only once.
 
-For all cases, measured times for LPS construction and search are very small and grow roughly linearly with text length.
+## Testing in different strings
 
-## Complexity Analysis
+I tested the implementation on three input sizes:
 
-Let `n` be the text length and `m` the pattern length.
+| String | N   | LPS build time | KMP search time |
+|--------|-----|----------------|-----------------|
+| Short  | 6   | 0.0035 ms      | 0.0176 ms       |
+| Medium | 11  | 0.0014 ms      | 0.0036 ms       |
+| Long   | 280 | 0.0009 ms      | 0.0252 ms       |
 
-- **Time complexity**
-  - LPS construction: `O(m)`
-  - Search: `O(n)`
-  - Overall: `O(n + m)` (best/average/worst case).
+The numbers are small in all cases.  
+The first (short) string looks a bit noisy in terms of time, which is normal on very small inputs
+any tiny overhead (JVM warm-up, OS scheduling, etc.) can dominate
+For medium and long strings the time grows roughly linearly with N, which is what we expect
 
-- **Space complexity**
-  - LPS array: `O(m)`
-  - Extra variables: `O(1)`  
-  - Excluding the output list of matches, total auxiliary space: `O(m)`.
+## Complexity
+
+Let n be the length of the text and m the length of the pattern.
+
+- Building the LPS array takes O(m) time
+- The search itself goes through the text once in O(n) time
+- Overall time complexity: O(n + m)
+
+The LPS array uses O(m) extra memory; apart from that only a few variables are needed,
+so the auxiliary space is also **O(m)** (not counting the list of match positions)
 
 ## Conclusion
 
-The KMP implementation correctly finds all occurrences of the pattern, including overlapping ones, and handles short, medium and long inputs.  
-The experimental timings confirm the theoretical behaviour: preprocessing and search scale linearly with the sizes of the pattern and text, so KMP is more efficient than the naïve `O(n·m)` approach for larger inputs.
+I implemented KMP from scratch, tested it on three different string lengths and printed LPS,
+matches and timings. The results match the theory: KMP handles overlapping matches correctly and
+its running time grows linearly with the size of the input, which makes it much more efficient
+than the naïve O(n·m) matching for longer texts
