@@ -66,4 +66,36 @@ public class KMP {
 
         return result;
     }
+    public static void main(String[] args) {
+        // Test 1: Short string
+        String text1 = "ababa";
+        String pattern1 = "aba";
+        System.out.println("Test 1 (short):");
+        System.out.println("Text:    " + text1);
+        System.out.println("Pattern: " + pattern1);
+        System.out.println("Matches at indices: " + kmpSearch(text1, pattern1));
+        System.out.println();
+
+        // Test 2: Medium-length string
+        String text2 = "the quick brown fox jumps over the lazy dog";
+        String pattern2 = "the";
+        System.out.println("Test 2 (medium):");
+        System.out.println("Text:    " + text2);
+        System.out.println("Pattern: " + pattern2);
+        System.out.println("Matches at indices: " + kmpSearch(text2, pattern2));
+        System.out.println();
+
+        // Test 3: Longer string
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 5000; i++) {
+            sb.append("abcxabcdabxabcdabcdabcy");
+        }
+        String text3 = sb.toString();
+        String pattern3 = "abcdabcy";
+        System.out.println("Test 3 (long):");
+        System.out.println("Text length:    " + text3.length());
+        System.out.println("Pattern:        " + pattern3);
+        System.out.println("Number of matches: " + kmpSearch(text3, pattern3).size());
+    }
 }
+
