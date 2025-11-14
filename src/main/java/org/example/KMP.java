@@ -1,37 +1,47 @@
 package org.example;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class KMP {
+
+    /**
+     * Build LPS array for the given pattern
+     * Time complexity: O(m), m = pattern length
+     */
+
     public static int[] buildLps(String pattern) {
         int m = pattern.length();
         int[] lps = new int[m];
 
-        int len = 0;
-        int i = 1;
+        int len = 0;  // current longest prefix-suffix
+        int i = 1;    // lps[0] is always 0
 
         while (i < m) {
             if (pattern.charAt(i) == pattern.charAt(len)) {
                 len++;
                 lps[i] = len;
                 i++;
-            }
-            else {
+            } else {
                 if (len != 0) {
+                    // fall back to previous longest prefix-suffix
                     len = lps[len - 1];
-                }
-                else {
+                } else {
+                    // no prefix-suffix for this i
                     lps[i] = 0;
                     i++;
                 }
             }
         }
-
         return lps;
     }
 
-    public static List<Integer> kmpSearch(String text, String pattern) {
+    /**
+     * KMP search that uses a precomputed LPS array
+     * Time complexity: O(n), n = text length
+     */
+    public static List<Integer> kmpSearch(String text, String pattern, int[] lps) {
         List<Integer> result = new ArrayList<>();
 
         if (pattern.isEmpty() || text.isEmpty() || pattern.length() > text.length()) {
@@ -41,10 +51,8 @@ public class KMP {
         int n = text.length();
         int m = pattern.length();
 
-        int[] lps = buildLps(pattern);
-
-        int i = 0;
-        int j = 0;
+        int i = 0; // index in text
+        int j = 0; // index in pattern
 
         while (i < n) {
             if (text.charAt(i) == pattern.charAt(j)) {
@@ -53,51 +61,73 @@ public class KMP {
             }
 
             if (j == m) {
+                // full match ends at i-1, starts at i-j
                 result.add(i - j);
-                j = lps[j - 1];
-            }
-            else if (i < n && text.charAt(i) != pattern.charAt(j)) {
+                j = lps[j - 1]; // try to find next match
+            } else if (i < n && text.charAt(i) != pattern.charAt(j)) {
                 if (j != 0) {
-                    j = lps[j - 1];
-                }
-                else {
-                    i++;
+                    j = lps[j - 1]; // shift pattern using LPS
+                } else {
+                    i++;            // no prefix matched yet -> move in text
                 }
             }
         }
 
         return result;
     }
+
+    // Helper to measure one test and print it nicely
+    private static void runTest(String label, String text, String pattern) {
+        int n = text.length();
+
+        System.out.println(label + " (n=" + n + ")");
+
+        // Measure LPS build time
+        long startLps = System.nanoTime();
+        int[] lps = buildLps(pattern);
+        long endLps = System.nanoTime();
+        double lpsMs = (endLps - startLps) / 1_000_000.0;
+
+        // Measure KMP search time
+        long startSearch = System.nanoTime();
+        List<Integer> matches = kmpSearch(text, pattern, lps);
+        long endSearch = System.nanoTime();
+        double searchMs = (endSearch - startSearch) / 1_000_000.0;
+
+        System.out.printf("LPS build time: %.4f ms%n", lpsMs);
+        System.out.printf("KMP search time: %.4f ms%n", searchMs);
+        System.out.println();
+
+        System.out.println("Text:    \"" + text + "\"");
+        System.out.println("Pattern: \"" + pattern + "\"");
+        System.out.println();
+
+        System.out.println("LPS Array: " + Arrays.toString(lps));
+        System.out.println("Matches:  " + matches);
+        System.out.println();
+    }
+
     public static void main(String[] args) {
-        // Test 1: Short string
-        String text1 = "ababa";
-        String pattern1 = "aba";
-        System.out.println("Test 1 (short):");
-        System.out.println("Text:    " + text1);
-        System.out.println("Pattern: " + pattern1);
-        System.out.println("Matches at indices: " + kmpSearch(text1, pattern1));
-        System.out.println();
+        // short example
+        String shortText = "banana";      // n = 6
+        String shortPattern = "ana";
+        runTest("SHORT", shortText, shortPattern);
 
-        // Test 2: Medium-length string
-        String text2 = "the quick brown fox jumps over the lazy dog";
-        String pattern2 = "the";
-        System.out.println("Test 2 (medium):");
-        System.out.println("Text:    " + text2);
-        System.out.println("Pattern: " + pattern2);
-        System.out.println("Matches at indices: " + kmpSearch(text2, pattern2));
-        System.out.println();
+        // medium example
+        String mediumText = "abracadabra";   // n = 11
+        String mediumPattern = "abra";
+        runTest("MEDIUM", mediumText, mediumPattern);
 
-        // Test 3: Longer string
+        // long example (n = 280)
+        String base = "abcxabcdabxabcdabcdabcy"; // length = 23
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 5000; i++) {
-            sb.append("abcxabcdabxabcdabcdabcy");
+        for (int i = 0; i < 12; i++) { // 12 * 23 = 276
+            sb.append(base);
         }
-        String text3 = sb.toString();
-        String pattern3 = "abcdabcy";
-        System.out.println("Test 3 (long):");
-        System.out.println("Text length:    " + text3.length());
-        System.out.println("Pattern:        " + pattern3);
-        System.out.println("Number of matches: " + kmpSearch(text3, pattern3).size());
+        sb.append("test"); // +4 = 280
+        String longText = sb.toString();
+        String longPattern = "abcdabcy";
+
+        runTest("LONG", longText, longPattern);
     }
 }
-
